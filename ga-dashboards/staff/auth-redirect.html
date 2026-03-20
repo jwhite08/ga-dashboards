@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Authenticating...</title>
+    <script src="https://alcdn.msauth.net/browser/2.38.2/js/msal-browser.min.js"></script>
+</head>
+<body>
+    <script>
+        // This page exists solely to handle the Microsoft login popup redirect.
+        // MSAL detects it is running inside a popup, processes the auth response,
+        // sends the token back to the parent window, and closes automatically.
+        //
+        // Key lookup order:
+        //   1. 'ga_it_clientId'  — set by the IT dashboard (namespaced key)
+        //   2. 'ga_clientId'     — set by the staff dashboard (legacy key)
+        // This allows the same auth-redirect.html to work on both Netlify apps
+        // without the IT and staff client IDs conflicting with each other.
+        const clientId = localStorage.getItem('ga_it_clientId')
+                      || localStorage.getItem('ga_clientId')
+                      || '';
+        const authority = localStorage.getItem('ga_it_authority')
+                       || localStorage.getItem('ga_authority')
+                       || 'https://login.microsoftonline.com/common';
+
+        const msalInstance = new msal.PublicClientApplication({
+            auth: {
+                clientId:    clientId,
+                authority:   authority,
+                redirectUri: window.location.href.split('?')[0].split('#')[0]
+            }
+        });
+        msalInstance.initialize().then(() => {
+            msalInstance.handleRedirectPromise().catch(console.error);
+        }).catch(console.error);
+    </script>
+</body>
+</html>
